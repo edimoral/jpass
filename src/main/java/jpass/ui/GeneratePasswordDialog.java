@@ -29,6 +29,7 @@
 package jpass.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -55,6 +56,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import jpass.util.ColorGradient;
 import jpass.util.Configuration;
 import jpass.util.CryptUtils;
 import jpass.util.PasswordStrengthEstimator;
@@ -335,10 +337,8 @@ public final class GeneratePasswordDialog extends JDialog implements ActionListe
     private void animateProgressBar(int strength, String passwordStrengthLabel) {
         this.strengthBar.setValue(strength);
         this.strengthLabel.setText(passwordStrengthLabel);
-        //float r = rand.nextFloat();
-        //float g = rand.nextFloat();
-        //float b = rand.nextFloat();
-        //strengthBar.setForeground(new Color(r, g, b));
+        Color color = ColorGradient.getGradientColor(strength);
+        strengthBar.setForeground(color);
     }
 
     public Optional<String> getGeneratedPassword() {
