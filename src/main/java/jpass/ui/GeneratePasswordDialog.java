@@ -36,8 +36,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.Optional;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -51,11 +49,15 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import jpass.util.Configuration;
 import jpass.util.CryptUtils;
+import jpass.util.PasswordStrengthEstimator;
 import jpass.util.SpringUtilities;
 
 import static jpass.ui.JPassFrame.getLocalizedMessages;
@@ -81,8 +83,6 @@ import static jpass.util.Constants.VIEW_WINDOW_UPPER_CASE_LETTERS;
  *
  */
 public final class GeneratePasswordDialog extends JDialog implements ActionListener {
-
-    private static final Logger LOG = Logger.getLogger(GeneratePasswordDialog.class.getName());
 
     /**
      * Characters for custom symbols generation.
@@ -195,6 +195,29 @@ public final class GeneratePasswordDialog extends JDialog implements ActionListe
         this.passwordPanel.setBorder(new TitledBorder(getLocalizedMessages().getString(PASSWORD_GENERATED_PASSWORD)));
 
         this.passwordField = TextComponentFactory.newTextField();
+        this.passwordField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                updateStrength();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                updateStrength();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                updateStrength();
+            }
+
+            private void updateStrength() {
+                SwingUtilities.invokeLater(() -> {
+                    String currentPassword = passwordField.getText();
+                    updatePasswordStrength(currentPassword);
+                });
+            }
+        });
         this.passwordPanel.add(this.passwordField, BorderLayout.NORTH);
 
         strengthBar = new JProgressBar(0, 100);
@@ -205,7 +228,7 @@ public final class GeneratePasswordDialog extends JDialog implements ActionListe
         strengthPanel.add(strengthBar);
 
         JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        strengthLabel.setText("Password Strength:");
+        strengthLabel.setText("");
         labelPanel.add(strengthLabel);
         strengthPanel.add(labelPanel);
         this.passwordPanel.add(strengthPanel, BorderLayout.CENTER);
@@ -274,20 +297,18 @@ public final class GeneratePasswordDialog extends JDialog implements ActionListe
     }
 
     private void generatePassword() {
-        strengthBar.setValue(new Random().nextInt(101));
-
-        String characterSet = "";
+        StringBuilder characterSet = new StringBuilder();
         for (int i = 0; i < PASSWORD_OPTIONS.length; i++) {
             if (this.checkBoxes[i].isSelected()) {
-                characterSet += PASSWORD_OPTIONS[i][1];
+                characterSet.append(PASSWORD_OPTIONS[i][1]);
             }
         }
 
         if (this.customSymbolsCheck.isSelected()) {
-            characterSet += this.customSymbolsField.getText();
+            characterSet.append(this.customSymbolsField.getText());
         }
 
-        if (characterSet.isEmpty()) {
+        if (characterSet.length() == 0) {
             MessageDialog.showWarningMessage(this, getLocalizedMessages().getString(PASSWORD_CAN_NOT_GENERATE_PASSWORD));
             return;
         }
@@ -298,6 +319,26 @@ public final class GeneratePasswordDialog extends JDialog implements ActionListe
             generated.append(characterSet.charAt(this.random.nextInt(characterSet.length())));
         }
         this.passwordField.setText(generated.toString());
+        updatePasswordStrength(generated.toString());
+    }
+
+    private void updatePasswordStrength(String generatedPassword) {
+        int strength = calculatePasswordStrength(generatedPassword);
+        String passwordStrengthLabel = PasswordStrengthEstimator.getLabelBasedOnPasswordStrength(strength);
+        animateProgressBar(strength, passwordStrengthLabel);
+    }
+
+    private int calculatePasswordStrength(String generatedPassword) {
+        return PasswordStrengthEstimator.calculatePasswordStrength(generatedPassword);
+    }
+
+    private void animateProgressBar(int strength, String passwordStrengthLabel) {
+        this.strengthBar.setValue(strength);
+        this.strengthLabel.setText(passwordStrengthLabel);
+        //float r = rand.nextFloat();
+        //float g = rand.nextFloat();
+        //float b = rand.nextFloat();
+        //strengthBar.setForeground(new Color(r, g, b));
     }
 
     public Optional<String> getGeneratedPassword() {
