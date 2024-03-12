@@ -7,10 +7,10 @@ public final class ColorGradient {
     // Define key color points
     private static final Color[] COLORS = {
             new Color(204, 0, 0),      // 0
-            new Color(255, 102, 0),   // 25
-            new Color(255, 204, 0),   // 50
-            new Color(51, 204, 51), // Light Green (75)
-            new Color(0, 102, 0)     // 100
+            new Color(255, 102, 0),    // 25
+            new Color(255, 204, 0),    // 50
+            new Color(51, 204, 51),    // (75)
+            new Color(0, 102, 0)       // 100
     };
 
     private ColorGradient() {
@@ -27,10 +27,6 @@ public final class ColorGradient {
     }
 
     public static Color getGradientColor(double score) {
-        if (score < 0 || score > 100) {
-            throw new IllegalArgumentException("Score must be between 0 and 100");
-        }
-
         // Find the fraction and color range the score falls into
         int index = (int) score / 25; // Determine the starting color index
         if (index >= COLORS.length - 1) {
