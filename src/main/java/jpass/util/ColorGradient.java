@@ -6,10 +6,10 @@ public final class ColorGradient {
 
     // Define key color points
     private static final Color[] COLORS = {
-            new Color(204, 0, 0),      // 0
-            new Color(255, 102, 0),    // 25
-            new Color(255, 204, 0),    // 50
-            new Color(51, 204, 51),    // (75)
+            new Color(107, 1, 1),      // 0
+            new Color(211, 9, 9),    // 25
+            new Color(255, 102, 0),    // 50
+            new Color(71, 218, 71),    // (75)
             new Color(0, 102, 0)       // 100
     };
 
